@@ -27,6 +27,20 @@ app.use(express.json({
 const ORDERS = {};
 
 // Create payment (Stripe PaymentIntent or Alma session)
+async function createAlmaPayment(almaPayload) {
+  const axios = require("axios");
+  return await axios.post(
+    process.env.ALMA_API_URL,
+    almaPayload,
+    {
+      headers: {
+        'Authorization': `Bearer ${process.env.ALMA_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+}
+
 app.post('/payment', async (req, res) => {
   try {
     const { amount, currency = 'eur', payment_method, order } = req.body;
@@ -77,17 +91,7 @@ app.post('/payment', async (req, res) => {
         return_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/alma/return?orderId=${orderId}`
       };
 
-      // Note: adjust headers/auth according to Alma documentation. Using Authorization if required.
-      const almaRes = await axios.post(
-        process.env.ALMA_API_URL,
-        almaPayload,
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.ALMA_SECRET_KEY}`,
-            'Content-Type': 'application/json',
-          }
-        }
-      );
+      const almaRes = await createAlmaPayment(almaPayload);
 
       const almaJson = almaRes.data;
 
