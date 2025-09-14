@@ -78,13 +78,12 @@ app.post('/payment', async (req, res) => {
       };
 
       // Note: adjust headers/auth according to Alma documentation. Using Authorization if required.
-      const axios = require("axios");
       const almaRes = await axios.post(
         process.env.ALMA_API_URL,
         almaPayload,
         {
           headers: {
-            'Authorization': `Bearer ${ALMA_SECRET_KEY}`,
+            'Authorization': `Bearer ${process.env.ALMA_SECRET_KEY}`,
             'Content-Type': 'application/json',
           }
         }
@@ -219,42 +218,3 @@ const port = process.env.PORT || 8000;
 app.listen(port, ()=>console.log('Server listening on', port));
 
 
-// Alma integration
-if (provider === "alma") {
-  try {
-    if (amount > 2000 * 100) {
-      return res.status(400).json({ error: "Amount exceeds €2000 Alma limit" });
-    }
-    const axios = require("axios");
-    const almaRes = await axios.post(
-      process.env.ALMA_API_URL,
-      {
-        purchase_amount: amount,
-        installments_count: 4,
-        customer: {
-          first_name: customerName,
-          email: customerEmail,
-          phone: customerPhone,
-        },
-        return_url: `${process.env.CLIENT_URL}/order/success`,
-        merchant_reference: "order-" + Date.now()
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.ALMA_API_KEY}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-    const payment = almaRes.data;
-    const order = new Order({
-      customerName, customerEmail, customerPhone, address,
-      amount, provider: "alma", almaPaymentId: payment.id
-    });
-    await order.save();
-    return res.json({ provider: "alma", redirectUrl: payment.url });
-  } catch (err) {
-    console.error("Alma error:", err.response?.data || err.message);
-    return res.status(500).json({ error: "Alma payment failed" });
-  }
-}
