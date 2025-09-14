@@ -78,16 +78,19 @@ app.post('/payment', async (req, res) => {
       };
 
       // Note: adjust headers/auth according to Alma documentation. Using Authorization if required.
-      const almaRes = await fetch(ALMA_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${ALMA_SECRET_KEY}`,
-        },
-        body: JSON.stringify(almaPayload),
-      });
+      const axios = require("axios");
+      const almaRes = await axios.post(
+        process.env.ALMA_API_URL,
+        almaPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${ALMA_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          }
+        }
+      );
 
-      const almaJson = await almaRes.json();
+      const almaJson = almaRes.data;
 
       // Alma might return a redirect URL or checkout token - pass it back to frontend
       // For demo, if Alma returns {redirect_url: ...} we use that. Otherwise we'll simulate.
