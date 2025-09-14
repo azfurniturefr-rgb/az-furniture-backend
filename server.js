@@ -4,6 +4,13 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 
+process.on('uncaughtException', function (err) {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', function (reason, p) {
+  console.error('Unhandled Rejection at:', p, 'reason:', reason);
+});
+
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
  .then(()=>console.log("MongoDB connected"))
  .catch(err=>console.error("MongoDB connection error:",err));
